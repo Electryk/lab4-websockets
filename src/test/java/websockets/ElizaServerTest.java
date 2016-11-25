@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ElizaServerTest {
 
@@ -54,16 +55,18 @@ public class ElizaServerTest {
 	}
 
 	@Test(timeout = 1000)
-	@Ignore
 	public void onChat() throws DeploymentException, IOException, URISyntaxException, InterruptedException {
-		// COMPLETE ME!!
+	    CountDownLatch latch = new CountDownLatch(5);
 		List<String> list = new ArrayList<>();
 		ClientEndpointConfig configuration = ClientEndpointConfig.Builder.create().build();
 		ClientManager client = ClientManager.createClient();
-		client.connectToServer(new ElizaEndpointToComplete(list), configuration, new URI("ws://localhost:8025/websockets/eliza"));
-		// COMPLETE ME!!
-		// COMPLETE ME!!
-		// COMPLETE ME!!
+		client.connectToServer(new ElizaEndpointToComplete(list, latch), configuration, new URI("ws://localhost:8025/websockets/eliza"));
+		latch.await();
+        assertEquals(5, list.size());
+        assertTrue(list.get(3).equals("What does that dream suggest to you?") ||
+                   list.get(3).equals("Do you dream often?") ||
+                   list.get(3).equals("What persons appear in your dreams?") ||
+                   list.get(3).equals("Are you disturbed by your dreams?"));
 	}
 
 	@After
@@ -92,17 +95,18 @@ public class ElizaServerTest {
     private static class ElizaEndpointToComplete extends Endpoint {
 
         private final List<String> list;
+        private final CountDownLatch latch;
 
-        ElizaEndpointToComplete(List<String> list) {
+        ElizaEndpointToComplete(List<String> list, CountDownLatch latch) {
             this.list = list;
+            this.latch = latch;
         }
 
         @Override
         public void onOpen(Session session, EndpointConfig config) {
-
-            // COMPLETE ME!!!
-
             session.addMessageHandler(new ElizaMessageHandlerToComplete());
+            
+            session.getAsyncRemote().sendText("Today I have a dream!!!");
         }
 
         private class ElizaMessageHandlerToComplete implements MessageHandler.Whole<String> {
@@ -110,7 +114,7 @@ public class ElizaServerTest {
             @Override
             public void onMessage(String message) {
                 list.add(message);
-                // COMPLETE ME!!!
+                latch.countDown();
             }
         }
     }
