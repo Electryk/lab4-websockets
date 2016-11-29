@@ -90,6 +90,7 @@ public class ElizaServerTest {
             list.add(message);
             latch.countDown();
         }
+        
     }
 
     private static class ElizaEndpointToComplete extends Endpoint {
@@ -117,5 +118,7 @@ public class ElizaServerTest {
                 latch.countDown();
             }
         }
+        
     }
+    
 }
